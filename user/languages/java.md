@@ -1,19 +1,17 @@
 ---
-title: Building a Java project
+title: Build a Java project
 layout: en
 
 ---
 
-<div id="toc">
-</div>
 
 <aside markdown="block" class="ataglance">
 
 | Java                         | Default                                                                                                              |
 |:-----------------------------|:---------------------------------------------------------------------------------------------------------------------|
-| Default `install`            | [Gradle](#Gradle-Dependency-Management), [Maven](#Maven-Dependency-Management), [Ant](#Ant-Dependency-Management)    |
-| Default `script`             | [Gradle](#Gradle-Default-Script-Command), [Maven](#Maven-Default-Script-Command), [Ant](#Ant-Default-Script-Command) |
-| [Matrix keys](#Build-Matrix) | `jdk`, `env`                                                                                                         |
+| Default `install`            | [Gradle](#gradle-dependency-management), [Maven](#maven-dependency-management), [Ant](#ant-dependency-management )   |
+| Default `script`             | [Gradle](#gradle-default-script-command), [Maven](#maven-default-script-command), [Ant](#ant-default-script-command) |
+| [Matrix keys](#build-matrix) | `jdk`, `env`                                                                                                         |
 | Support                      | [Travis CI](mailto:support@travis-ci.com)                                                                            |
 
 Minimal example:
@@ -21,20 +19,19 @@ Minimal example:
 ```yaml
   language: java
 ```
+{: data-file=".travis.yml"}
 </aside>
 
-### What This Guide Covers
-
-{{ site.data.snippets.trusty_note }}
+{{ site.data.snippets.unix_note }}
 
 The rest of this guide covers configuring Java projects in Travis CI. If you're
-new to Travis CI please read our [Getting Started](/user/getting-started/) and
-[build configuration](/user/customizing-the-build/) guides first.
+new to Travis CI, please read our [Onboarding](/user/onboarding/) and
+[General Build configuration](/user/customizing-the-build/) guides first.
 
 ## Overview
 
-The Travis CI environment contains various versions of OpenJDK, Oracle JDK,
-Gradle, Maven and Ant.
+The Travis CI environment contains various versions of OpenJDK,
+Gradle, Maven, and Ant.
 
 To use the Java environment, add the following to your `.travis.yml`:
 
@@ -43,7 +40,7 @@ language: java
 ```
 {: data-file=".travis.yml"}
 
-## Projects Using Maven
+## Maven Projects
 
 ### Maven Dependency Management
 
@@ -62,7 +59,7 @@ or if your project uses the `mvnw` wrapper script:
 > Note that the Travis CI build lifecycle and the Maven build lifecycle use similar
 terminology for different build phases. For example, `install` in a Travis CI
 build comes much earlier than `install` in the Maven build lifecycle. More details
-can be found about the [Travis Build Lifecycle](/user/customizing-the-build/#The-Build-Lifecycle)
+can be found about the [Travis Build Lifecycle](/user/job-lifecycle/)
 and the [Maven Build Lifecycle](https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html).
 
 ### Maven Default Script Command
@@ -83,9 +80,9 @@ Travis CI uses that instead:
 
 > The default command does not generate JavaDoc (`-Dmaven.javadoc.skip=true`).
 
-To use a different `script` command, customize the [build step](/user/customizing-the-build/#Customizing-the-Build-Step).
+To use a different `script` command, customize the [build step](/user/job-lifecycle/#customizing-the-build-phase).
 
-## Projects Using Gradle
+## Gradle Projects
 
 ### Gradle Dependency Management
 
@@ -100,6 +97,8 @@ or
 ```bash
 ./gradlew assemble
 ```
+
+To use a different `install` command, customize the [installation step](/user/job-lifecycle/#customizing-the-installation-phase).
 
 ### Gradle Default Script Command
 
@@ -117,7 +116,7 @@ root, Travis CI uses that wrapper instead:
 ./gradlew check
 ```
 
-To use a different `script` command, customize the [build step](/user/customizing-the-build/#Customizing-the-Build-Step).
+To use a different `script` command, customize the [build step](/user/job-lifecycle/#customizing-the-build-phase).
 
 ### Caching
 
@@ -136,18 +135,14 @@ cache:
 ```
 {: data-file=".travis.yml"}
 
-### Gradle daemon is disabled by default
+> Note that if you use Gradle with `sudo` (i.e. `sudo ./gradlew assemble`), the caching configuration above will have no effect, since the depencencies will be in `/root/.gradle` which the `travis` user account does not have write access to.
 
-[As recommended](https://docs.gradle.org/current/userguide/gradle_daemon.html)
-by the Gradle team, the Gradle daemon is disabled by default.
-If you would like to run `gradle` with daemon, add `--daemon` to the invocation.
-
-## Projects Using Ant
+## Ant Projects
 
 ### Ant Dependency Management
 
 Because there is no single standard way of installing project dependencies with
-Ant, you need to specify the exact command to run using `install:` key in your 
+Ant, you need to specify the exact command to run using `install:` key in your
 `.travis.yml`, for example:
 
 ```yaml
@@ -164,62 +159,39 @@ If Travis CI does not detect Maven or Gradle files it runs Ant:
 ant test
 ```
 
-To use a different `script` command, customize the [build step](/user/customizing-the-build/#Customizing-the-Build-Step).
+To use a different `script` command, customize the [build step](/user/job-lifecycle/#customizing-the-build-phase).
 
-## Testing Against Multiple JDKs
+The list of available JVMs for different dists are at:
 
-To test against multiple JDKs, use the `jdk:` key in `.travis.yml`. For example,
-to test against Oracle JDKs 8 and 9, as well as OpenJDK 7:
+  * [JDKs installed for **Noble**](/user/reference/noble/#jvm-clojure-groovy-java-scala-support)
+  * [JDKs installed for **Jammy**](/user/reference/jammy/#jvm-clojure-groovy-java-scala-support)
+  * [JDKs installed for **Focal**](/user/reference/focal/#jvm-clojure-groovy-java-scala-support)
+  * [JDKs installed for **Bionic**](/user/reference/bionic/#jvm-clojure-groovy-java-scala-support)
 
-```yaml
-jdk:
-  - oraclejdk8
-  - oraclejdk9
-  - openjdk7
-```
-{: data-file=".travis.yml"}
+### Switch JDKs (Java 8 and lower) within one Job
 
-> Note that testing against multiple Java versions is not supported on OS X. See
-the [OS X Build Environment](/user/reference/osx/#JDK-and-OS-X) for more
-details.
-
-### Switching JDKs Within One Job
-
-If your build needs to switch JDKs during a job, you can do so with
-`jdk_switcher use …`.
+If your build needs to switch JDKs (Java 8 and below) during a job, you can do so with
+[`jdk_switcher`](https://github.com/michaelklishin/jdk_switcher#what-jdk-switcher-is).
 
 ```yaml
 script:
-  - jdk_switcher use oraclejdk8
-  - # do stuff with Java 8
-  - jdk_switcher use openjdk7
-  - # do stuff with Java 7
+  - jdk_switcher use openjdk8
+  - # do stuff with open Java 8
 ```
 {: data-file=".travis.yml"}
 
 Use of `jdk_switcher` also updates `$JAVA_HOME` appropriately.
 
-### Updating Oracle JDK to a recent release
+## Current JDK providers
 
-Your repository may require a newer release of Oracle JDK than the pre-installed
-version.
-(You can consult [the list of published Oracle JDK packages](https://launchpad.net/~webupd8team/+archive/ubuntu/java).)
-
-The following example will use the latest Oracle JDK 8:
-
+Currently, our builds are using Bellsoft and Adoptium JDK providers - they are switched based on the distribution and architecture you are using in your build. Additionally, we've added IBM's Semeru JDK - to use it, instead of using jdk: jdkX or jdk: openjdkX syntax, simply use jdk: semeruX like here:
 ```yaml
-sudo: false
-addons:
-  apt:
-    packages:
-      - oracle-java8-installer
+language: java
+jdk: semeru11
 ```
 {: data-file=".travis.yml"}
 
-## Build Matrix
-
-For Java projects, `env` and `jdk` can be given as arrays
-to construct a build matrix.
+Available semeru JDKs for AMD, S390X, PPC64LE, and ARM architectures: 8, 11, 16, 17, 18, 19, 20, 21, 22
 
 ## Examples
 
@@ -229,3 +201,7 @@ to construct a build matrix.
 - [Symfony 2 Eclipse plugin](https://github.com/pulse00/Symfony-2-Eclipse-Plugin/blob/master/.travis.yml)
 - [RESThub](https://github.com/resthub/resthub-spring-stack/blob/master/.travis.yml)
 - [Joni](https://github.com/jruby/joni/blob/master/.travis.yml), JRuby's regular expression implementation
+
+## Build Config Reference
+
+You can find more information on the build config format for [Java](https://config.travis-ci.com/ref/language/java) in our [Travis CI Build Config Reference](https://config.travis-ci.com/).
